@@ -3,12 +3,13 @@ import torchvision.models as models
 
 
 class BasicBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, upsample=None):
+    def __init__(self, in_channels, out_channels,
+                 activation=None, upsample=None):
         super().__init__()
 
         self.conv1 = nn.Conv2d(
             in_channels=in_channels, out_channels=out_channels,
-            kernel_size=3, stride=1, padding=1, bias=False
+            kernel_size=5, stride=1, padding=2, bias=False
         )
         self.bn1 = nn.BatchNorm2d(num_features=out_channels)
         self.relu = nn.ReLU(inplace=True)
@@ -18,6 +19,9 @@ class BasicBlock(nn.Module):
         )
         self.bn2 = nn.BatchNorm2d(num_features=out_channels)
         self.upsample = upsample
+
+        if activation is not None:
+            self.activation = activation
 
     def forward(self, t):
 
@@ -32,7 +36,7 @@ class BasicBlock(nn.Module):
             t = self.upsample(t)
         else:
             t += residual
-            t = self.relu(t)
+            t = self.activation(t)
 
         return t
 
@@ -51,16 +55,16 @@ class ColorizeNet(nn.Module):
             *list(resnet18.children())[:6]
         )
         self.decoder = nn.Sequential(
-            self._make_layer(BasicBlock, 128, 64),
-            self._make_layer(BasicBlock, 64, 32),
-            self._make_layer(BasicBlock, 32, 2)
+            self._make_layer(BasicBlock, 128, 64, nn.ReLU(inplace=True)),
+            self._make_layer(BasicBlock, 64, 32, nn.ReLU(inplace=True)),
+            self._make_layer(BasicBlock, 32, 2, nn.Sigmoid())
         )
 
-    def _make_layer(self, block, in_channels, out_channels):
+    def _make_layer(self, block, in_channels, out_channels, activation):
         upsample = nn.Upsample(scale_factor=2, mode='nearest')
         layers = []
-        layers.append(block(in_channels, out_channels, upsample))
-        layers.append(block(out_channels, out_channels, None))
+        layers.append(block(in_channels, out_channels, upsample=upsample))
+        layers.append(block(out_channels, out_channels, activation=activation))
 
         return nn.Sequential(*layers)
 
