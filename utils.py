@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 import torchvision.datasets as datasets
 from skimage.color import rgb2lab, rgb2gray
 
@@ -19,7 +20,8 @@ class GrayscaleImageFolder(datasets.ImageFolder):
         path, target = self.imgs[index]
         img = self.loader(path)
         if self.transform is not None:
-            img_orig = self.transform(img).numpy()
+            img_orig = self.transform(img)
+            img_orig = np.asarray(img_orig)
             img_lab = rgb2lab(img_orig)
             img_lab = (img_lab+128)/255
             img_ab = img_lab[:, :, 1:3]
