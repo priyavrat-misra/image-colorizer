@@ -24,8 +24,8 @@ class GrayscaleImageFolder(datasets.ImageFolder):
             img_orig = self.transform(img)
             img_orig = np.asarray(img_orig)
             img_lab = rgb2lab(img_orig)
-            img_lab = (img_lab+128)/255
             img_ab = img_lab[:, :, 1:3]
+            img_ab = (img_ab + 128) / 255
             img_ab = torch.from_numpy(img_ab.transpose((2, 0, 1))).float()
             img_orig = rgb2gray(img_orig)
             img_orig = torch.from_numpy(img_orig).unsqueeze(0).float()
@@ -64,7 +64,13 @@ def to_rgb(img_l, img_ab):
     '''
     combines Lightness (grayscale) and AB channels, and converts it to RGB
     '''
-    img_lab = torch.cat((img_l, img_ab), 1).numpy().squeeze()
+    if img_l.shape == img_ab.shape:
+        img_lab = torch.cat((img_l, img_ab), 1).numpy().squeeze()
+    else:
+        img_lab = torch.cat(
+            (img_l, img_ab[:, :, :img_l.size(2), :img_l.size(3)]), 1
+        ).numpy().squeeze()
+
     img_lab = img_lab.transpose(1, 2, 0)
     img_lab[:, :, 0] = img_lab[:, :, 0] * 100
     img_lab[:, :, 1:] = img_lab[:, :, 1:] * 255 - 128
