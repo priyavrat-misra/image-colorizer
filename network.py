@@ -18,14 +18,21 @@ class BasicBlock(nn.Module):
             kernel_size=3, stride=1, padding=1, bias=False
         )
         self.bn2 = nn.BatchNorm2d(num_features=out_channels)
-        self.upsample = upsample
 
         if activation is not None:
             self.activation = activation
+        else:
+            self.res_conv = nn.Conv2d(
+                in_channels=in_channels, out_channels=out_channels,
+                kernel_size=1, stride=1, bias=False
+            )
+            self.res_bn = nn.BatchNorm2d(num_features=out_channels)
+
+        self.upsample = upsample
 
     def forward(self, t):
 
-        residual = t
+        res = t
         t = self.conv1(t)
         t = self.bn1(t)
         t = self.relu(t)
@@ -33,9 +40,13 @@ class BasicBlock(nn.Module):
         t = self.bn2(t)
 
         if self.upsample is not None:
+            res = self.res_conv(res)
+            res = self.res_bn(res)
+            t += res
+            t = self.relu(t)
             t = self.upsample(t)
         else:
-            t += residual
+            t += res
             t = self.activation(t)
 
         return t
@@ -45,7 +56,7 @@ class ColorizeNet(nn.Module):
     def __init__(self):
         super().__init__()
 
-        resnet18 = models.resnet18(pretrained=False)
+        resnet18 = models.resnet18(pretrained=True)
         # change first conv layer to accept single channel (grayscale)
         resnet18.conv1.weight = nn.Parameter(
             resnet18.conv1.weight.mean(dim=1).unsqueeze(dim=1))

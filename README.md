@@ -26,5 +26,6 @@
 ## Todo
 - [x] define and train a model architecture
 - [x] add argparse support
-- [ ] define and train with a more residual architecture
+- [x] define a more residual architecture
+- [ ] train it
 - [ ] deploy with flask
