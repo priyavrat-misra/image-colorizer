@@ -56,7 +56,8 @@ class ColorizeNet(nn.Module):
     def __init__(self):
         super().__init__()
 
-        resnet18 = models.resnet18(pretrained=True)
+        # make pretrained=True before starting the training process
+        resnet18 = models.resnet18(pretrained=False)
         # change first conv layer to accept single channel (grayscale)
         resnet18.conv1.weight = nn.Parameter(
             resnet18.conv1.weight.mean(dim=1).unsqueeze(dim=1))
