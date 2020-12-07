@@ -7,8 +7,8 @@ from utils import load_gray, to_rgb
 parser = argparse.ArgumentParser(description='colorizes an image')
 parser.add_argument('-i', '--img_path', type=str, metavar='', required=True,
                     help='path and/or name of grayscale image to colorize')
-parser.add_argument('-s', '--shape', type=int, metavar='',
-                    help='saves colorized image to given shape (in pixels)')
+parser.add_argument('-r', '--res', type=int, metavar='',
+                    help='resizes the input to given resolution {default:360}')
 parser.add_argument('-o', '--out_path', type=str, metavar='', required=True,
                     help='name to which the colorized image to be saved')
 
@@ -22,7 +22,7 @@ model.load_state_dict(
 
 def main():
     args = parser.parse_args()
-    img_l = load_gray(args.img_path, shape=args.shape)
+    img_l = load_gray(args.img_path, shape=args.res)
 
     model.eval()
     with torch.no_grad():
